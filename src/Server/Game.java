@@ -52,9 +52,10 @@ public class Game implements Runnable {
 
 						server.write(key, pk.toByteArray());
 					}
+					game.addClient(new Client(key, game));
 				}
 
-				game.addClient(new Client(key, game));
+				
 
 			}
 
@@ -75,7 +76,7 @@ public class Game implements Runnable {
 		addEntity(ball);
 
 		while (true) {
-			if (fpscontrol.ticked(22)) {
+			//if (fpscontrol.ticked(16)) {
 				synchronized (clientList) {
 					Iterator<Client> it = clientList.iterator();
 					while (it.hasNext()) {
@@ -115,6 +116,12 @@ public class Game implements Runnable {
 					}
 				}
 
+			//}
+			try {
+				Thread.sleep(16);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 
@@ -125,7 +132,7 @@ public class Game implements Runnable {
 	}
 
 	public void addEntity(Entity e) {
-		synchronized (entityList) {
+		
 			serial++;
 			e.serial = serial;
 			e.game = this;
@@ -138,7 +145,7 @@ public class Game implements Runnable {
 			pk.serial = serial;
 			pk.obj = 0;
 			server.sendMessage(pk);
-		}
+		
 	}
 
 	public void removeEntity(Entity e) {

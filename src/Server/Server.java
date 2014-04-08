@@ -86,7 +86,7 @@ public abstract class Server implements Runnable {
 			server.register(selector, SelectionKey.OP_ACCEPT);
 			started(false);
 			while (state.get() == State.RUNNING) {
-				selector.select(100); // 100 ms delay en fazla
+				selector.select(0); // 100 ms delay en fazla
 				for (Iterator<SelectionKey> i = selector.selectedKeys()
 						.iterator(); i.hasNext();) {
 					SelectionKey key = i.next();
@@ -103,9 +103,8 @@ public abstract class Server implements Runnable {
 
 							// client.socket().setTcpNoDelay(true);
 							SelectionKey newkey = client.register(selector,
-									SelectionKey.OP_READ
-											| SelectionKey.OP_WRITE);
-
+									SelectionKey.OP_READ);
+							
 							synchronized (clientList) {
 								clientList.add(newkey);
 							}
@@ -123,6 +122,7 @@ public abstract class Server implements Runnable {
 						// ioe.printStackTrace();
 					}
 				}
+				selector.selectedKeys().clear();
 			}
 		} catch (Throwable e) {
 			throw new RuntimeException("Server failure: " + e.getMessage());
@@ -166,12 +166,15 @@ public abstract class Server implements Runnable {
 				SocketChannel channel = (SocketChannel) channelKey.channel();
 				while (writeBuffer.remaining() > 0) {
 					bytesWritten = channel.write(writeBuffer);
-
+					if (bytesWritten == -1) {
+						resetKey(channelKey);
+						disconnected(channelKey);
+					}
+					
+					if (bytesWritten == 0)
+						Thread.sleep(5);
 				}
-				if (bytesWritten == -1) {
-					resetKey(channelKey);
-					disconnected(channelKey);
-				}
+				
 			} catch (Exception e) {
 				resetKey(channelKey);
 				disconnected(channelKey);
